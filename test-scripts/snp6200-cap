@@ -1,0 +1,13 @@
+#!/bin/bash
+#first pass a a pipeline to push from SNP-6200 rtsp to gst-switch.
+
+#this test pipe line should provide data from snp-6200 to gst-switch
+gst_w=1280
+gst_h=720
+ipaddress=192.168.2.155
+capfile='video.ts'
+
+gst-launch-1.0 mpegtsmux name=muxer ! filesink location=${capfile} rtspsrc location=rtspt://${ipaddress}:554/profile3/media.smp latency=0 name=camera camera. ! rtph264depay ! tee name=video ! queue ! muxer. camera. ! rtppcmudepay ! queue name=cam ! mulawdec ! audioconvert ! audioresample ! audio/x-raw, rate=44100 ! tee name=audio ! voaacenc bitrate=128000 ! queue ! muxer.  audio. ! gdppay ! tcpclientsink port=4000 video. ! decodebin ! videoconvert ! videoscale !  video/x-raw,format=I420,width=${gst_w},height=${gst_h} ! gdppay ! tcpclientsink port=3000
+
+
+
