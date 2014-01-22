@@ -34,3 +34,7 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+rtspserver/barsntone
+rtspserver/snp6200
+
