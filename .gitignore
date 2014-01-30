@@ -37,4 +37,7 @@ nosetests.xml
 
 rtspserver/barsntone
 rtspserver/snp6200
+*.ts
+*.mp4
+*.avi
 
