@@ -98,6 +98,7 @@ main (int argc, char *argv[])
    * any launch line works as long as it contains elements named pay%d. Each
    * element with pay%d names will be a stream */
   factory = gst_rtsp_media_factory_new ();
+  gst_rtsp_media_factory_set_shared(factory, TRUE);
   launch = g_strdup_printf("( "
       "filesrc location=%s .mp4 name=srcfile ! qtdemux name=demux "
       "demux.video_0 ! queue ! rtph264pay name=pay0 pt=96 "
