@@ -4,7 +4,10 @@
 #this test pipe line should provide data from snp-6200 to gst-switch
 ipaddress=192.168.2.202
 
-gst-launch-1.0 -v rtspsrc location=rtspt://${ipaddress}:554/profile3/media.smp latency=0 name=camera camera. ! rtpjitterbuffer ! rtpmp2tdepay ! tsdemux ! decodebin ! queue ! autovideosink camera.
+gst-launch-1.0 -v \
+  rtspsrc location=rtspt://${ipaddress}:554/profile3/media.smp \
+    latency=0 name=camera \
+  camera.! rtpmp2tdepay ! tsdemux ! decodebin ! queue ! autovideosink
 
 
 
