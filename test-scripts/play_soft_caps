@@ -61,6 +61,10 @@ port=$TSPORT auto-multicast=true sync=false"
 OUTPUT="$OUTPUT_FILE "
 #OUTPUT="tee name=mpts ! $OUTPUT_FILE $MPTS"
 
+MIXENCODE="rawvideo. ! fakesink "
+#MIXENCODE="rawvideo. ! x264enc bitrate=$videobr ! muxer. "
+#MIXENCODE="rawvideo. ! vaapiencode_h264 bitrate=$videobr ! muxer. "
+
 gst-launch-1.0 -v \
   $CAMERA \
   $AUDIO_PROCESS \
@@ -75,4 +79,4 @@ gst-launch-1.0 -v \
   $SLIDES \
   $SLIDES_PROCESS \
   $SLIDES_SCALE \
-  rawvideo. ! x264enc bitrate=$videobr ! muxer. \
+  $MIXENCODE
