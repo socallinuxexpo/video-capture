@@ -6,6 +6,7 @@ gst_w=1280
 gst_h=720
 ipaddress=192.168.2.155
 capfile='video.ts'
+PUSHIP=192.168.2.226
 
 gst-launch-1.0 -v \
   mpegtsmux name=muxer \
@@ -14,8 +15,8 @@ gst-launch-1.0 -v \
   camera. ! rtpg726depay ! decodebin ! audioconvert ! \
     audioresample ! "audio/x-raw,rate=44100" ! \
     voaacenc bitrate=128000 ! tee name=audio ! queue ! muxer. \
-  video. ! queue ! rtph264pay ! udpsink host=127.0.0.1 port=8000 \
-  audio. ! queue ! rtpmp4apay ! udpsink host=127.0.0.1 port=8001
+  video. ! queue ! rtph264pay ! udpsink host=$PUSHIP port=8000 \
+  audio. ! queue ! rtpmp4apay ! udpsink host=$PUSHIP port=8001
 
 
 
