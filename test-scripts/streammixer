@@ -1,0 +1,87 @@
+#!/bin/bash
+#first pass a a pipeline to push from SNP-6200 rtsp to gst-switch.
+
+#this test pipe line should provide data from snp-6200 to gst-switch
+camera=192.168.2.155
+slides=192.168.2.202
+bgfile=lax.jpg
+#outputfile=mixed%d.ts
+outputfile=mixed.ts
+ident=southern-califo-0973.4pa8-30y7-md82-6jq2
+audiobr=128
+videobr=10240
+totalbr=$((audiobr+videobr))
+
+CAMERA="rtspsrc location=rtspt://${camera}:554/profile3/media.smp \
+latency=0 name=camera "
+AUDIO_PROCESS="camera. ! rtpg726depay ! decodebin ! audioconvert ! audio/x-raw, rate=8000 ! queue name=rawcam_a "
+AUDIO_RESAMPLE="audioresample ! audio/x-raw,rate=44100 "
+AUDIO_ENCODE="voaacenc bitrate=${audobr}000 ! queue name=encoded_a "
+CAMERA_PROCESS="camera. ! rtph264depay ! video/x-h264, stream-format=avc, \
+alignment=au ! h264parse ! video/x-h264, height=1080, width=1920, \
+stream-format=avc, alignment=au, parsed=true ! avdec_h264 ! \
+video/x-raw, format=I420, width=1920, height=1080, pixel-aspect-ratio=1/1, \
+interlace-mode=progressive, colorimetry=bt709 ! \
+queue name=rawcam_v "
+CAMERA_PROCESS_R="camera. ! rtph264depay ! video/x-h264, stream-format=avc, \
+alignment=au ! h264parse ! video/x-h264, height=1080, width=1920, \
+stream-format=avc, alignment=au, parsed=true ! avdec_h264 ! \
+video/x-raw, format=I420, width=1920, height=1080, pixel-aspect-ratio=1/1, \
+interlace-mode=progressive, colorimetry=bt709 ! videorate ! video/x-raw, format=I420, width=1920, height=1080, pixel-aspect-ratio=1/1, \
+interlace-mode=progressive, colorimetry=bt709, framerate=25/1 ! \
+queue name=rawcam_v "
+CAMERA_PROCESS_H="camera. ! rtph264depay ! video/x-h264, stream-format=avc, \
+alignment=au ! h264parse ! video/x-h264, height=1080, width=1920, \
+stream-format=avc, alignment=au, parsed=true ! vaapidecode ! \
+video/x-raw, format=I420, width=1920, height=1080, pixel-aspect-ratio=1/1, \
+interlace-mode=progressive, colorimetry=bt709 ! \
+queue name=rawcam_v "
+CAMERA_SCALE="rawcam_v. ! videoconvert ! videoscale ! video/x-raw, width=960, height=540 ! aspectratiocrop aspect-ratio=4/3 ! videoconvert ! queue name=scaled_v ! mix."
+
+SLIDES="rtspsrc location=rtspt://${slides}:554/profile3/media.smp \
+latency=0 is-live=true name=slides"
+SLIDES_PROCESS="slides. ! rtpmp2tdepay ! tsdemux ! mpeg2dec ! video/x-raw, format=I420, width=720, height=480, pixel-aspect-ratio=1/1, interlace-mode=progressive, chroma-site=mpeg2, colorimetry=bt601, framerate=30/1 ! queue name=rawslides"
+SLIDES_PROCESS_H="slides. ! rtpmp2tdepay ! tsdemux ! video/mpeg, mpegversion=2, systemstream=false ! vaapidecode ! video/x-raw, format=I420, width=720, height=480, pixel-aspect-ratio=1/1, interlace-mode=progressive, chroma-site=mpeg2, colorimetry=bt601, framerate=30/1 ! queue name=rawslides"
+
+SLIDES_SCALE="rawslides. ! videoconvert ! videoscale ! video/x-raw, width=1440, height=960 ! videocrop top=42 left=68 right=76 bottom=114 ! videoconvert ! queue name=scaled_slides ! mix."
+BACKGROUND="multifilesrc location=${bgfile} caps=image/jpeg,framerate=1/1 ! \
+jpegdec ! queue name=background ! mix. "
+
+
+#MUXER="flvmux streamable=true name=muxer"
+MUXER="mpegtsmux name=muxer"
+#MUXER="qtmux streamable=true name=muxer"
+
+RTMPSINK="rtmpsink \
+location=\"rtmp://a.rtmp.youtube.com/live2/x/${ident}?videoKeyframeFrequency=1&totalDatarate=$totalbr app=live2 flashVer=\"FME/3.0%20(compatible;%20FMSc%201.0)\" swfUrl=rtmp://a.rtmp.youtube.com/live2\""
+
+OUTPUT_FILE="filesink location=$outputfile "
+#OUTPUT_FILE="multifilesink index=3 location=$outputfile "
+
+multicast_ip_addr=224.1.1.1
+TSPORT=4000
+MPTS="mpts. ! queue ! rtpmp2tpay ! udpsink host=$multicast_ip_addr \
+port=$TSPORT auto-multicast=true sync=false"
+
+OUTPUT="$OUTPUT_FILE "
+#OUTPUT="tee name=mpts ! $OUTPUT_FILE $MPTS"
+
+#MIXENCODE="rawvideo. ! fakesink " #discard video
+#MIXENCODE="rawvideo. ! x264enc bitrate=$videobr ! muxer. "
+MIXENCODE="rawvideo. ! vaapiencode_h264 bitrate=$videobr ! muxer. "
+
+gst-launch-1.0 -v \
+  $CAMERA \
+  $AUDIO_PROCESS \
+  rawcam_a. ! $AUDIO_RESAMPLE ! \
+  $AUDIO_ENCODE ! muxer. \
+  $MUXER ! \
+  $OUTPUT \
+  $CAMERA_PROCESS \
+  videomixer name=mix sink_2::xpos=624 sink_2::ypos=282 ! queue name=rawvideo \
+  $BACKGROUND \
+  $CAMERA_SCALE \
+  $SLIDES \
+  $SLIDES_PROCESS_H \
+  $SLIDES_SCALE \
+  $MIXENCODE
