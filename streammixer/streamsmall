@@ -50,7 +50,7 @@ OUTPUT_FILE="filesink location=$outputfile "
 
 OUTPUT="$OUTPUT_FILE "
 
-gst-launch-1.0 -v \
+gst-launch-1.0 \
   videomixer name=vmix sink_2::xpos=343 sink_2::ypos=154 ! $MIXCAPS ! queue name=rawvideo \
   $BACKGROUND \
   $CAMSRC \
