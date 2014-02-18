@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ident="southern-califo-0973.4zj2-ydqj-fxqj-fh8m"
+ident="southern-califo-0973.d5x8-5hkh-qg5j-8tpd"
 ipaddress=192.168.2.155
 VBR=768
 
@@ -9,7 +9,8 @@ source parts
 #while [ true ]
 #do
   GST_DEBUG=rtmpsink:5 gst-launch-1.0 -v \
-    $CAMSRC ! $ENCODE  ! $VPARSE \
+    $CAMSRC \
+    $VIDSRC ! $SENCODE  ! $VPARSE \
     $TESTAUDIO ! queue ! \
     $AENCODER ! $APARSE ! $MUX ! \
     rtmpsink \

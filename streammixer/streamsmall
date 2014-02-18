@@ -23,7 +23,7 @@ TESTAUDIO="audiotestsrc wave=silence is-live=true ! audio/x-raw,format=S16LE,end
 AUDIOSRC="$CAMAUDIO ! audiorate ! audio/x-raw,rate=44100,channels=1 "
 
 CAMSRC="rtspsrc location=rtspt://${ipaddress}:554/profile5/media.smp \
-latency=0 name=camera do-timestamp=true is-live=true "
+latency=0 name=camera do-timestamp=true "
 VIDSRC="camera. ! rtph264depay ! decodebin "
 VIDSCALE="videoscale !
 video/x-raw, format=I420, width=640, height=360, pixel-aspect-ratio=1/1, interlace-mode=progressive, framerate=30/1 "
@@ -36,7 +36,7 @@ MUX="flvmux streamable=true name=muxer ! queue name=muxed "
 CAMERA_SCALE="videoconvert ! videoscale ! video/x-raw, width=495, height=270 ! aspectratiocrop aspect-ratio=4/3 ! videoconvert ! queue name=scaled_v ! vmix."
 
 SLIDES="rtspsrc location=rtspt://${slides}:554/profile3/media.smp \
-latency=0 is-live=true name=slides"
+latency=0 name=slides"
 SLIDES_PROCESS="slides. ! rtpmp2tdepay ! tsdemux ! mpeg2dec ! video/x-raw, format=I420, width=720, height=480, pixel-aspect-ratio=1/1, interlace-mode=progressive, chroma-site=mpeg2, colorimetry=bt601, framerate=30/1 ! queue name=rawslides"
 SLIDES_SCALE="rawslides. ! videoconvert ! videoscale ! video/x-raw, width=1080, height=720 ! videocrop top=42 left=68 right=76 bottom=114 ! videoconvert ! queue name=scaled_slides ! vmix."
 BACKGROUND="multifilesrc location=${bgfile} caps=image/jpeg,framerate=1/1 ! \
@@ -55,7 +55,6 @@ gst-launch-1.0 \
   videomixer name=vmix sink_2::xpos=343 sink_2::ypos=154 ! $MIXCAPS ! queue name=rawvideo \
   $BACKGROUND \
   $CAMSRC \
-  $VIDSRC ! $CAMERA_SCALE \
   $SLIDES \
   $SLIDES_PROCESS \
   $SLIDES_SCALE \
@@ -65,3 +64,4 @@ gst-launch-1.0 \
   rtmpsink \
     location="rtmp://a.rtmp.youtube.com/live2/x/${ident}?videoKeyframeFrequency=1&totalDatarate=896 app=live2 flashVer=\"FME/3.0%20(compatible;%20FMSc%201.0)\" swfUrl=rtmp://a.rtmp.youtube.com/live2"   
 
+  #$VIDSRC ! $CAMERA_SCALE \
