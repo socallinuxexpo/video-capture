@@ -13,13 +13,14 @@ totalbr=$((audiob+VBR))
 HENCODE="vaapiencode_h264 bitrate=$VBR keyframe-period=60 max-bframes=0 "
 SENCODE="x264enc bitrate=$VBR key-int-max=60 bframes=0 "
 
-ENCODE="videorate ! video/x-raw,width=640,height=360,framerate=30/1 ! ${HENCODE} "
+ENCODE="videorate ! video/x-raw,width=640,height=360,framerate=30/1 ! ${SENCODE} "
 CAMAUDIO="camera. ! rtpg726depay ! decodebin ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 "
 TESTAUDIO="audiotestsrc wave=silence is-live=true ! audio/x-raw,format=S16LE,endianness=1234,signed=true,width=16,depth=16,rate=44100,channels=1 "
 
-#AUDIOSRC="$CAMAUDIO ! amix. $TESTAUDIO ! liveadder name=amix ! \
-#audio/x-raw,rate=44100,channels=1 ! audiorate "
-AUDIOSRC="$TESTAUDIO "
+#AUDIOSRC="$CAMAUDIO ! amix. $TESTAUDIO ! liveadder name=amix ! audio/x-raw,rate=44100,channels=1 ! audiorate ! audio/x-raw,rate=44100,channels=1 "
+#AUDIOSRC="$CAMAUDIO ! amix. $TESTAUDIO ! liveadder name=amix ! audio/x-raw,rate=44100,channels=1 "
+#AUDIOSRC="$TESTAUDIO "
+AUDIOSRC="$CAMAUDIO ! audiorate ! audio/x-raw,rate=44100,channels=1 "
 
 CAMSRC="rtspsrc location=rtspt://${ipaddress}:554/profile5/media.smp \
 latency=0 name=camera do-timestamp=true is-live=true "
