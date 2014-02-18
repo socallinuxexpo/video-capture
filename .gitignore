@@ -42,4 +42,5 @@ rtspserver/mixstream
 *.ts
 *.mp4
 *.avi
-
+*.flv
+*.log
