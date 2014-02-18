@@ -8,7 +8,7 @@ source parts
 
 #while [ true ]
 #do
-  GST_DEBUG=rtmpsink:5 gst-launch-1.0 -v \
+  gst-launch-1.0 \
     $CAMSRC \
     camera. ! rtpjitterbuffer ! rtph264depay ! $VPARSE \
     $AUDIOSRC ! queue ! \
