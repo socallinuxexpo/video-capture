@@ -1,0 +1,14 @@
+#!/bin/bash
+
+hosts="laa-cam lab-cam lac-cam lajolla-cam carmel-cam centuryab-cam centurycd-cam marina-cam"
+
+target=${1:-}
+if [ "$target" = "" ]; then
+  target=.
+fi
+for host in $hosts; do
+  if [ -f $target/$host ]; then
+    rm $target/$host
+  fi
+  ln -s recorder $target/$host
+done
