@@ -84,7 +84,7 @@ case "$1" in
 	  loopvideo $host &
 	  sleep 1
           ident=${host}_ident
-	  runningp=`/bin/ps aux | /bin/grep [g]st-launch | /bin/grep ${!ident} | wc -l`
+	  running=`/bin/ps aux | /bin/grep [g]st-launch | /bin/grep ${!ident} | wc -l`
 	  if [ $running -eq 1 ] ; then
 	    echo "finished."
 	  else
