@@ -1,0 +1,9 @@
+#!/bin/bash
+
+hosts="laa-slide lab-slide lac-slide lajolla-slide carmel-slide centuryab-slide centurycd-slide marina-slide"
+
+for host in $hosts; do
+  echo -n "$host is: "
+  nmap -p 554 $host | grep rtsp
+  echo
+done
