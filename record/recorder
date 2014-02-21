@@ -1,6 +1,8 @@
 #!/bin/bash
 
-hosts="carmel-cam"
+host=`echo $0 | sed 's/\.\///g'`
+
+#hosts="carmel-cam"
 #hosts="laa-cam lab-cam lac-cam lajolla-cam carmel-cam centuryab-cam centurycd-cam marina-cam"
 LOGDIR=/mnt/storage/logs
 OUTDIR=/mnt/storage/videos
@@ -59,67 +61,54 @@ loopvideo()
 stop()
 {
   cur=$$
-  for pid in $(/usr/bin/pgrep proxycap); do
+  for pid in $(/usr/bin/pgrep $host); do
+    echo "$cur--$pid"
     if [ $pid -ne $cur ] ; then
       kill $pid
     fi
   done
-  vlc=`/usr/bin/pgrep vlc | wc -l`
-  if [ $vlc -gt 0 ]; then
-    child=`/usr/bin/killall vlc`
-  fi
+  gst=`/bin/grep [g]st\-launch | /bin/grep $host | awk '{ print $2 }'`
+  kill $gst
 }
 
 case "$1" in
   start)
-	stop
-	echo "starting $0   "
-	for host in $hosts ; do
-	  echo -n "starting $host:   "
-	  loopvideo $host &
-	  sleep 1
-          ident=${host}_ident
-	  running=`/bin/ps aux | /bin/grep [g]st\-launch | /bin/grep "${!ident}" | wc -l`
-	  if [ $running -eq 1 ] ; then
-	    echo "finished."
-	  else
-	    echo "Failed!"
-	  fi
-	done 
+	echo -n "starting $host:   "
+	loopvideo $host &
+	sleep 1
+	running=`/bin/ps aux | /bin/grep [g]st\-launch | /bin/grep $host | wc -l`
+	if [ $running -eq 1 ] ; then
+	  echo "finished."
+	else
+	  echo "Failed!"
+	fi
 	;;
   test)
-	echo -n "test $0:   "
-	for host in $hosts ; do
-	  echo -n "starting $host:   "
-	  proxyvideo $host &
-	  sleep 1
-          ident=${host}_ident
-	  running=`/bin/ps aux | /bin/grep [g]st\-launch | /bin/grep "${!ident}" | wc -l`
-	  if [ $running -eq 1 ] ; then
-	    echo "finished."
-	  else
-	    echo "Failed!"
-	  fi
-	done
+	echo -n "starting $host:   "
+	proxyvideo $host &
+	sleep 1
+	running=`/bin/ps aux | /bin/grep [g]st\-launch | /bin/grep $host | wc -l`
+	if [ $running -eq 1 ] ; then
+	  echo "finished."
+	else
+	  echo "Failed!"
+	fi
 	echo "finished."
 	;;
   stop)
-	echo -n "stoping $0:   "
+	echo -n "stoping $host:   "
 	stop
 	echo "finished."
 	;;
   status)
-	for host in $hosts ; do
-          ident=${host}_ident
-	  app=`/bin/ps aux | /bin/grep [g]st-launch | /bin/grep "${!ident}" | wc -l`
-	  if [ $app -eq 1 ] ; then
-	    echo "$host Running"
-	    exit 0
-          else
-	    echo "$host not running."
-            exit 1
-	  fi
-	done
+	app=`/bin/ps aux | /bin/grep [g]st-launch | /bin/grep $host | wc -l`
+	if [ $app -eq 1 ] ; then
+	  echo "$host Running"
+	  exit 0
+        else
+	  echo "$host not running."
+          exit 1
+	fi
 	;;
   *)
 	echo $"Usage: $0 {start|stop|restart|status|capture}"
