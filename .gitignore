@@ -43,3 +43,4 @@ rtspserver/mixstream
 *.avi
 *.flv
 *.log
+*.err

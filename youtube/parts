@@ -5,14 +5,14 @@ SENCODE="x264enc bitrate=$VBR key-int-max=60 bframes=0 "
 
 SENCODE="videorate ! video/x-raw,width=640,height=360,framerate=25/1 ! ${SENCODE} "
 HENCODE="videorate ! video/x-raw,width=640,height=360,framerate=25/1 ! ${HENCODE} "
-CAMAUDIO="camera. ! rtpjitterbuffer ! rtpg726depay ! decodebin ! queue ! audiorate ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 "
+CAMAUDIO="camera. ! rtpjitterbuffer  latency=2000 ! rtpg726depay ! decodebin ! queue ! audiorate ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 "
+MCAMAUDIO="camera. ! rtpjitterbuffer latency=2000 ! rtppcmudepay ! decodebin ! queue ! audiorate ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 ! rgvolume pre-amp=6.0 headroom=10.0 ! rglimiter ! audioconvert "
 TESTAUDIO="audiotestsrc wave= is-live=true ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 "
 
-#AUDIOSRC="$CAMAUDIO ! mix. $TESTAUDIO ! liveadder name=mix ! audio/x-raw,rate=44100,channels=1  "
 AUDIOSRC="$CAMAUDIO "
 
 CAMSRC="rtspsrc location=rtspt://${ipaddress}:554/profile5/media.smp latency=0 name=camera "
-VIDSRC="camera. ! rtpjitterbuffer ! rtph264depay ! decodebin ! queue "
+VIDSRC="camera. ! rtpjitterbuffer  latency=2000 ! rtph264depay ! decodebin ! queue "
 VPARSE="h264parse ! "video/x-h264,level=(string)4.1,profile=main" ! queue ! muxer. "
 AENCODER="voaacenc bitrate=128000"
 APARSE="aacparse ! audio/mpeg,mpegversion=4,stream-format=raw ! queue "
