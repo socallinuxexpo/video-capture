@@ -43,8 +43,7 @@ proxyvideo()
   setsid gst-launch-1.0 \
     $CAMSRC \
     camera. ! rtpjitterbuffer latency=2000 ! rtph264depay ! $VPARSE \
-    $MCAMAUDIO ! queue ! \
-    $AENCODER ! $APARSE ! $MUX ! \
+    camera. ! rtpjitterbuffer latency=2000 ! rtpmp4adepay ! $APARSE ! $MUX ! \
     filesink location=$OUTPUTFILE \
     2>> ${logfile}.err >> ${logfile}.log
   echo "###### Exited at: $(date) #######" >> ${logfile}.log
