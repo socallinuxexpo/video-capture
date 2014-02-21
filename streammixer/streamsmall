@@ -18,8 +18,8 @@ CAMAUDIO="camera. ! rtpjitterbuffer latency=1000 ! rtpg726depay ! decodebin ! au
 MCAMAUDIO="camera. ! rtpjitterbuffer latency=2000 ! rtppcmudepay ! decodebin ! audiorate ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 "
 TESTAUDIO="audiotestsrc wave=silence is-live=true ! audio/x-raw,format=S16LE,endianness=1234,signed=true,width=16,depth=16,rate=44100,channels=1 "
 
-AUDIOSRC="$CAMAUDIO ! mix. $TESTAUDIO ! liveadder name=mix ! audio/x-raw,rate=44100,channels=1  "
-#AUDIOSRC="$CAMAUDIO "
+#AUDIOSRC="$CAMAUDIO ! mix. $TESTAUDIO ! liveadder name=mix ! audio/x-raw,rate=44100,channels=1  "
+AUDIOSRC="$MCAMAUDIO "
 
 CAMSRC="rtspsrc location=rtspt://${ipaddress}:554/profile5/media.smp latency=1000 name=camera "
 VIDSRC="camera. ! rtpjitterbuffer latency=2000 ! rtph264depay ! decodebin ! videorate ! video/x-raw,width=640,height=360,framerate=25/1 "
