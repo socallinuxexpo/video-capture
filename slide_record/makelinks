@@ -1,6 +1,6 @@
 #!/bin/bash
 
-hosts="laa-cam lab-cam lac-cam lajolla-cam carmel-cam centuryab-cam centurycd-cam marina-cam"
+hosts="laa-slide lab-slide lac-slide lajolla-slide carmel-slide centuryab-slide centurycd-slide marina-slide"
 
 target=${1:-}
 if [ "$target" = "" ]; then
