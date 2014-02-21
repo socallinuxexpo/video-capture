@@ -1,7 +1,7 @@
 #!/bin/bash
 
-ipaddress=192.168.2.155
-slides=192.168.2.202
+ipaddress=172.16.10.12
+slides=172.16.10.249
 bgfile=../test-scripts/lax.jpg
 
 outputfile=mixed.flv
