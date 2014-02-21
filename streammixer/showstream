@@ -1,0 +1,64 @@
+#!/bin/bash
+
+ipaddress=172.16.10.12
+slides=lajolla-slide
+bgfile=../test-scripts/lax.jpg
+
+outputfile=mixed.flv
+ident=southern-califo-0973.yyxw-5rur-rv0e-acw5
+audiobr=128
+VBR=768
+totalbr=$((audiob+VBR))
+
+HENCODE="vaapiencode_h264 bitrate=$VBR keyframe-period=60 max-bframes=0 "
+SENCODE="x264enc bitrate=$VBR key-int-max=60 bframes=0 "
+
+ENCODE="${SENCODE} "
+MCAMAUDIO="camera. ! rtpjitterbuffer latency=2000 ! rtppcmudepay ! decodebin ! queue ! audiorate ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 ! rgvolume pre-amp=6.0 headroom=10.0 ! rglimiter ! audioconvert "
+TESTAUDIO="audiotestsrc wave=silence is-live=true ! audio/x-raw,format=S16LE,endianness=1234,signed=true,width=16,depth=16,rate=44100,channels=1 "
+
+#AUDIOSRC="$CAMAUDIO ! mix. $TESTAUDIO ! liveadder name=mix ! audio/x-raw,rate=44100,channels=1  "
+AUDIOSRC="$MCAMAUDIO "
+
+CAMSRC="rtspsrc location=rtspt://${ipaddress}:554/profile5/media.smp latency=1000 name=camera "
+VIDSRC="camera. ! rtpjitterbuffer latency=2000 ! rtph264depay ! decodebin ! videorate ! video/x-raw,width=640,height=360,framerate=25/1 "
+VIDSCALE="videoscale ! video/x-raw, format=I420, width=640, height=360, pixel-aspect-ratio=1/1, interlace-mode=progressive, framerate=30/1 "
+VPARSE="h264parse ! "video/x-h264,level=(string)4.1,profile=main" ! queue ! muxer. "
+AENCODER="voaacenc bitrate=128000"
+APARSE="aacparse ! audio/mpeg,mpegversion=4,stream-format=raw ! queue "
+MUX="flvmux streamable=true name=muxer ! queue name=muxed "
+
+CAMERA_SCALE="videoconvert ! videoscale ! video/x-raw, width=495, height=270 ! aspectratiocrop aspect-ratio=4/3 ! videoconvert ! queue name=scaled_v ! vmix."
+
+SLIDES="rtspsrc location=rtspt://${slides}:554/profile3/media.smp latency=2000 name=slides"
+SLIDES_PROCESSN="slides. ! rtpjitterbuffer latency=2000 ! rtpmp2tdepay ! tsdemux ! mpeg2dec ! video/x-raw, format=I420, width=720, height=480, pixel-aspect-ratio=1/1, interlace-mode=progressive, chroma-site=mpeg2, colorimetry=bt601, framerate=30/1 ! queue name=rawslides"
+SLIDES_PROCESS="slides. ! rtpjitterbuffer latency=1000 ! rtpmp2tdepay ! tsdemux ! mpeg2dec ! video/x-raw, format=I420, width=720, height=480, pixel-aspect-ratio=1/1, interlace-mode=progressive, chroma-site=mpeg2, colorimetry=bt601, framerate=30/1 ! videorate ! video/x-raw, format=I420, width=720, height=480, framerate=30/1 ! queue name=rawslides"
+SLIDES_SCALE="rawslides. ! videoconvert ! videoscale ! video/x-raw, width=1080, height=720 ! videocrop top=42 left=68 right=76 bottom=114 ! videoconvert ! queue name=scaled_slides ! vmix."
+BACKGROUND="multifilesrc location=${bgfile} caps=image/jpeg,framerate=1/1 ! \
+jpegdec ! videoscale ! video/x-raw,format=I420,width=1280,height=720 ! queue name=background ! vmix. "
+
+MIXCAPS="video/x-raw, format=I420, width=1280, height=720, pixel-aspect-ratio=1/1, interlace-mode=progressive, framerate=30/1 "
+MUXER="flvmux streamable=true name=muxer"
+#MUXER="mpegtsmux name=muxer"
+#MUXER="qtmux streamable=true name=muxer"
+
+OUTPUT_FILE="filesink location=$outputfile "
+
+OUTPUT="$OUTPUT_FILE "
+
+gst-launch-1.0 \
+  videomixer name=vmix sink_2::xpos=343 sink_2::ypos=154 ! $MIXCAPS ! queue name=rawvideo \
+  $BACKGROUND \
+  $CAMSRC \
+  $VIDSRC ! $CAMERA_SCALE \
+  $SLIDES \
+  $SLIDES_PROCESS \
+  $SLIDES_SCALE \
+  rawvideo. ! $VIDSCALE ! tee name=sc2 ! $ENCODE ! $VPARSE \
+  $AUDIOSRC ! tee name=ac2 ! $AENCODER ! $APARSE ! muxer. \
+  sc2. ! fpsdisplaysink \
+  $MUXER ! \
+  rtmpsink \
+    location="rtmp://a.rtmp.youtube.com/live2/x/${ident}?videoKeyframeFrequency=1&totalDatarate=896 app=live2 flashVer=\"FME/3.0%20(compatible;%20FMSc%201.0)\" swfUrl=rtmp://a.rtmp.youtube.com/live2"   
+
+
