@@ -13,7 +13,7 @@ CAMAUDIO="camera. ! rtpjitterbuffer  latency=2000 ! rtpg726depay ! decodebin ! q
 MCAMAUDIO="camera. ! rtpjitterbuffer latency=2000 ! rtppcmudepay ! decodebin ! queue ! audiorate ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 ! rgvolume pre-amp=6.0 headroom=10.0 ! rglimiter ! audioconvert "
 
 VIDSRC="camera. ! rtpjitterbuffer  latency=2000 ! rtph264depay ! decodebin ! queue "
-VPARSE="h264parse ! "video/x-h264,level=(string)4.1,profile=main" ! queue ! muxer. "
+VPARSE="h264parse ! \"video/x-h264,level=(string)4.1,profile=main\" ! queue "
 AENCODER="voaacenc bitrate=128000"
 APARSE="aacparse ! audio/mpeg,mpegversion=4,stream-format=raw ! queue "
 MUX="mpegtsmux name=muxer ! queue name=muxed "
@@ -42,8 +42,7 @@ proxyvideo()
   echo "###### Started at: $(date) #######" >> ${logfile}.err
   setsid gst-launch-1.0 \
     $CAMSRC \
-    camera. ! rtpjitterbuffer latency=2000 ! rtph264depay ! $VPARSE \
-    camera. ! rtpjitterbuffer latency=2000 ! rtpmp4adepay ! $APARSE ! $MUX ! \
+    camera. ! rtpjitterbuffer latency=2000 ! rtpmp2tdepay ! queue ! \
     filesink location=$OUTPUTFILE \
     2>> ${logfile}.err >> ${logfile}.log
   echo "###### Exited at: $(date) #######" >> ${logfile}.log
