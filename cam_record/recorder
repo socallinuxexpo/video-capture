@@ -1,7 +1,7 @@
 #!/bin/bash
 
 host=`echo $0 | sed 's/\.\///g'`
-
+ident=""
 #hosts="carmel-cam"
 #hosts="laa-cam lab-cam lac-cam lajolla-cam carmel-cam centuryab-cam centurycd-cam marina-cam"
 LOGDIR=/mnt/storage/logs
@@ -9,15 +9,17 @@ OUTDIR=/mnt/storage/videos
 
 . /lib/lsb/init-functions
 
-CAMAUDIO="camera. ! rtpjitterbuffer  latency=2000 ! rtpg726depay ! decodebin ! queue ! audiorate ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 "
-MCAMAUDIO="camera. ! rtpjitterbuffer latency=2000 ! rtppcmudepay ! decodebin ! queue ! audiorate ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 ! rgvolume pre-amp=6.0 headroom=10.0 ! rglimiter ! audioconvert "
+CAMAUDIO="camera. ! rtpjitterbuffer  latency=2000 ! rtpg726depay ! decodebin ! queue ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 "
+#CAMAUDIO="camera. ! rtpjitterbuffer  latency=2000 ! rtpg726depay ! decodebin  ! queue ! audiorate ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 "
+#CAMAUDIO="camera. ! rtpjitterbuffer  latency=2000 ! rtpg726depay ! decodebin  ! queue ! audiorate ! audio/x-raw,rate=8000,channels=1 "
+#CAMAUDIO="camera. ! rtpjitterbuffer  latency=2000 ! rtpg726depay ! avdec_g726 ! queue ! audiorate ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 "
 
-VIDSRC="camera. ! rtpjitterbuffer  latency=2000 ! rtph264depay ! decodebin ! queue "
+CAMVIDEO="camera. ! rtpjitterbuffer  latency=2000 ! rtph264depay "
 VPARSE="h264parse ! "video/x-h264,level=(string)4.1,profile=main" ! queue ! muxer. "
 AENCODER="voaacenc bitrate=128000"
-APARSE="aacparse ! audio/mpeg,mpegversion=4,stream-format=raw ! queue "
+APARSE="aacparse ! audio/mpeg,mpegversion=4,stream-format=raw ! queue ! muxer. "
 MUX="mpegtsmux name=muxer ! queue name=muxed "
-
+MUX2="flvmux streamable=true name=muxer ! queue name=muxed "
 
 checkurl()
 {
@@ -29,26 +31,46 @@ checkurl()
   done
 }
 
+startvideo()
+{
+  date=`/bin/date +%Y%m%d_%H%M`
+  OUTPUTFILE=${OUTDIR}/${1}_${date}.flv
+  proxyvideo $1 $date $OUTPUTFILE &
+  sleep 1
+  running=`/bin/ps aux | /bin/grep [g]st\-launch | /bin/grep $host | wc -l`
+  if [ $running -eq 1 ] ; then
+    sleep 2
+    size=`ls -l $OUTPUTFILE | awk '{ print $5 }'`
+    echo "\n\n[$size]"
+  else
+    return false
+  fi
+}
+
 proxyvideo()
 {
-  CAMSRC="rtspsrc location=rtspt://${1}:554/profile3/media.smp latency=2000 name=camera "
-  date=`/bin/date +%Y%m%d_%H%M`
+  CAMSRC="rtspsrc location=rtsp://${1}:554/profile3/media.smp latency=2000 name=camera "
+  date=$2
+  OUTPUTFILE=$3
   if [ -d "$LOGDIR" ]; then
     mkdir -p $LOGDIR
   fi
   logfile=$LOGDIR/$1
-  OUTPUTFILE=${OUTDIR}/${1}_${date}.ts
+  if [ -d "$OUTDIR" ]; then
+    mkdir -p $OUTDIR
+  fi
   echo "###### Started at: $(date) #######" >> ${logfile}.log
   echo "###### Started at: $(date) #######" >> ${logfile}.err
+
   setsid gst-launch-1.0 \
     $CAMSRC \
-    camera. ! rtpjitterbuffer latency=2000 ! rtph264depay ! $VPARSE \
-    $MCAMAUDIO ! queue ! \
-    $AENCODER ! $APARSE ! $MUX ! \
-    filesink location=$OUTPUTFILE \
+    $CAMVIDEO ! $VPARSE \
+    $CAMAUDIO ! queue ! $AENCODER ! $APARSE \
+    $MUX2 ! filesink location=$OUTPUTFILE \
     2>> ${logfile}.err >> ${logfile}.log
   echo "###### Exited at: $(date) #######" >> ${logfile}.log
   echo "###### Exited at: $(date) #######" >> ${logfile}.err
+
 }
 
 loopvideo()
@@ -62,13 +84,13 @@ stop()
 {
   cur=$$
   for pid in $(/usr/bin/pgrep $host); do
-    echo "$cur--$pid"
     if [ $pid -ne $cur ] ; then
       kill $pid
     fi
   done
-  gst=`/bin/grep [g]st\-launch | /bin/grep $host | awk '{ print $2 }'`
-  kill $gst
+  for pid in $(ps aux | /bin/grep [g]st\-launch | /bin/grep $host | awk '{ print $2 }'); do
+    kill $pid
+  done
 }
 
 case "$1" in
@@ -85,19 +107,12 @@ case "$1" in
 	;;
   test)
 	echo -n "starting $host:   "
-	proxyvideo $host &
+	startvideo $host
 	sleep 1
-	running=`/bin/ps aux | /bin/grep [g]st\-launch | /bin/grep $host | wc -l`
-	if [ $running -eq 1 ] ; then
-	  echo "finished."
-	else
-	  echo "Failed!"
-	fi
-	echo "finished."
 	;;
   stop)
 	echo -n "stoping $host:   "
-	stop
+	stop 
 	echo "finished."
 	;;
   status)
