@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ident="southern-califo-0973.d5x8-5hkh-qg5j-8tpd"
+ident="southern-califo-0973.ew85-q6vj-x5mv-e2zj"
 ipaddress=192.168.2.155
 VBR=768
 
@@ -11,7 +11,7 @@ source parts
   GST_DEBUG=rtmpsink:5 gst-launch-1.0 -v \
     $CAMSRC \
     $VIDSRC ! $SENCODE  ! $VPARSE \
-    $TESTAUDIO ! queue ! \
+    $MCAMAUDIO ! queue ! \
     $AENCODER ! $APARSE ! $MUX ! \
     rtmpsink \
       location="rtmp://a.rtmp.youtube.com/live2/x/${ident}?videoKeyframeFrequency=1&totalDatarate=896 app=live2 flashVer=\"FME/3.0%20(compatible;%20FMSc%201.0)\" swfUrl=rtmp://a.rtmp.youtube.com/live2" 
