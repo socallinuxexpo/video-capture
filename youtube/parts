@@ -7,11 +7,8 @@ SENCODE="videorate ! video/x-raw,width=640,height=360,framerate=25/1 ! ${SENCODE
 HENCODE="videorate ! video/x-raw,width=640,height=360,framerate=25/1 ! ${HENCODE} "
 CAMAUDIO="camera. ! rtpjitterbuffer  latency=2000 ! rtpg726depay ! decodebin ! queue ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 "
 MCAMAUDIO="camera. ! rtpjitterbuffer latency=2000 ! rtppcmudepay ! decodebin ! queue ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 "
-TESTAUDIO="audiotestsrc wave= is-live=true ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 "
 
-AUDIOSRC="$CAMAUDIO "
-
-CAMSRC="rtspsrc location=rtspt://${ipaddress}:554/profile5/media.smp latency=0 name=camera "
+CAMSRC="rtspsrc location=rtsp://${ipaddress}:554/profile6/media.smp latency=0 name=camera "
 VIDSRC="camera. ! rtpjitterbuffer  latency=2000 ! rtph264depay ! decodebin ! queue "
 VPARSE="h264parse ! "video/x-h264,level=(string)4.1,profile=main" ! queue ! muxer. "
 AENCODER="voaacenc bitrate=128000"
