@@ -2,7 +2,6 @@
 
 ident="southern-califo-0973.51j0-80pj-hc8f-4qz5"
 ipaddress=172.16.10.12
-VBR=768
 
 source parts
 
@@ -11,7 +10,7 @@ source parts
   gst-launch-1.0 \
     $CAMSRC \
     camera. ! rtpjitterbuffer latency=2000 ! rtph264depay ! $VPARSE \
-    $MCAMAUDIO ! queue ! \
+    $CAMAUDIO ! queue ! \
     $AENCODER ! $APARSE ! $MUX ! \
     rtmpsink \
       location="rtmp://a.rtmp.youtube.com/live2/x/${ident}?videoKeyframeFrequency=1&totalDatarate=896 app=live2 flashVer=\"FME/3.0%20(compatible;%20FMSc%201.0)\" swfUrl=rtmp://a.rtmp.youtube.com/live2" 
