@@ -1,13 +1,14 @@
 #!/bin/bash
 
-ident="southern-califo-0973.51j0-80pj-hc8f-4qz5"
-ipaddress=172.16.10.12
+ident="southern-califo-0973.ew85-q6vj-x5mv-e2zj"
+ipaddress=192.168.2.155
+VBR=768
 
 source parts
 
 #while [ true ]
 #do
-  gst-launch-1.0 \
+  GST_DEBUG=rtmpsink:5 gst-launch-1.0 \
     $CAMSRC \
     camera. ! rtpjitterbuffer latency=2000 ! rtph264depay ! $VPARSE \
     $CAMAUDIO ! queue ! \
