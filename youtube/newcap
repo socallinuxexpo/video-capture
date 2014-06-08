@@ -1,12 +1,16 @@
 #!/bin/bash
 
-hosts="carmel"
+hosts="home"
 #hosts="laa lab lac lajolla carmel belair centurya centuryb centuryc centuryd marina"
+#hosts="laa lab lac lajolla centuryab centurycd marina carmel"
+#hosts="laa lab lac centuryab centurycd marina carmel"
+#hosts="laa"
+#hosts="lajolla"
 
 . /lib/lsb/init-functions
 
-CAMAUDIO="camera. ! rtpjitterbuffer  latency=2000 ! rtpg726depay ! decodebin ! queue ! audiorate ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 "
-MCAMAUDIO="camera. ! rtpjitterbuffer latency=2000 ! rtppcmudepay ! decodebin ! queue ! audiorate ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 ! rgvolume pre-amp=6.0 headroom=10.0 ! rglimiter ! audioconvert "
+CAMAUDIO="camera. ! rtpjitterbuffer  latency=2000 ! rtpg726depay ! decodebin ! queue ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 "
+MCAMAUDIO="camera. ! rtpjitterbuffer latency=2000 ! rtppcmudepay ! decodebin ! queue ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 "
 TESTAUDIO="audiotestsrc wave= is-live=true ! audio/x-raw,rate=8000,channels=1 ! audioconvert ! audioresample ! audio/x-raw,rate=44100,channels=1 "
 
 AUDIOSRC="$CAMAUDIO "
@@ -32,7 +36,7 @@ checkurl()
 
 proxyvideo()
 {
-  CAMSRC="rtspsrc location=rtspt://${1}-cam:554/profile5/media.smp latency=2000 name=camera "
+  CAMSRC="rtspsrc location=rtsp://${1}-cam:554/profile5/media.smp latency=2000 name=camera "
   date=`/bin/date +%Y%m%d_%H%M`
   if [ -d "$LOGDIR" ]; then
     mkdir -p $LOGDIR
@@ -44,7 +48,7 @@ proxyvideo()
   setsid gst-launch-1.0 \
     $CAMSRC \
     camera. ! rtpjitterbuffer latency=2000 ! rtph264depay ! $VPARSE \
-    $MCAMAUDIO ! queue ! \
+    $CAMAUDIO ! queue ! \
     $AENCODER ! $APARSE ! $MUX ! \
     rtmpsink \
       location="rtmp://a.rtmp.youtube.com/live2/x/${!ident}?videoKeyframeFrequency=1&totalDatarate=1152 app=live2 flashVer=\"FME/3.0%20(compatible;%20FMSc%201.0)\" swfUrl=rtmp://a.rtmp.youtube.com/live2" \
