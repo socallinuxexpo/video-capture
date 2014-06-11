@@ -1,0 +1,16 @@
+#!/bin/bash
+#first pass a a pipeline to push from SNP-6200 rtsp to gst-switch.
+
+#this test pipe line should provide data from snp-6200 to gst-switch
+ipaddress=192.168.2.155
+
+gst-launch-1.0 -v \
+  rtspsrc location=rtspt://${ipaddress}:554/profile5/media.smp \
+    latency=0 name=camera \
+    camera. ! rtph264depay ! video/x-h264,stream-format=avc,alignment=au ! decodebin ! \
+    shmsink socket-path=/tmp/feed-control wait-for-connection=0 shm-size=10000000 \
+    camera. ! rtpg726depay ! avdec_g726 ! queue ! fakesink sync=false
+
+
+
+

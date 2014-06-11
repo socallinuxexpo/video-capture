@@ -1,0 +1,14 @@
+#!/bin/bash
+
+ident="southern-califo-0973.ew85-q6vj-x5mv-e2zj"
+ipaddress=192.168.2.155
+
+
+gst-launch-1.0 -v rtspsrc location=rtsp://${ipaddress}:554/profile5/media.smp latency=0 name=camera ! \
+     rtph264depay ! avdec_h264 ! video/x-raw,width=640,height=360,framerate=25/1 ! queue ! \
+     fakesink dump=true sync=false \
+    camera. ! rtpg726depay ! fakesink sync=false 
+
+#     shmsink sync=false wait-for-connection=false  socket-path=/tmp/fromcam \
+
+

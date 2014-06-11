@@ -1,0 +1,13 @@
+#!/bin/bash
+
+ident="southern-califo-0973.ew85-q6vj-x5mv-e2zj"
+ipaddress=192.168.2.155
+name=test2
+
+gst-launch-1.0 -v shmsrc socket-path=/tmp/fromcam \
+  queue ! x264enc bitrate=768 key-int-max=60 bframes=0 \
+    byte-stream=false aud=true tune=zerolatency ! h264parse ! \
+    "video/x-h264,level=(string)4.1,profile=main" ! queue ! mux. \
+  flvmux streamable=true name=mux ! queue ! \
+  filesink location=$name.flv
+

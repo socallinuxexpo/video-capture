@@ -1,0 +1,19 @@
+#!/bin/bash
+#first pass a a pipeline to push from SNP-6200 rtsp to gst-switch.
+
+#this test pipe line should provide data from snp-6200 to gst-switch
+ipaddress=192.168.2.155
+name=t3
+
+gst-launch-1.0 -v \
+  shmsrc socket-path=/tmp/feed-control is-live=true do-timestamp=true ! \
+  video/x-raw,format=I420,width=1920,height=1080,pixel-aspect-ratio=1/1, \
+  interlace-mode=progressive,colorimetry=bt709,framerate=30/1 ! \
+  x264enc bitrate=768 key-int-max=60 bframes=0 byte-stream=false aud=true \
+    tune=zerolatency ! h264parse !"video/x-h264,level=(string)4.1,profile=main" ! queue ! \
+  flvmux streamable=true name=mux ! queue ! \
+  filesink location=$name.flv
+  
+
+
+
