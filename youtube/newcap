@@ -68,15 +68,16 @@ loopvideo()
 stop()
 {
   cur=$$
-  for pid in $(/usr/bin/pgrep proxycap); do
-    if [ $pid -ne $cur ] ; then
+	for host in $hosts ; do
+    for pid in $(/usr/bin/pgrep $host); do
+      if [ $pid -ne $cur ] ; then
+        kill $pid
+      fi
+    done
+    for pid in $(ps aux | /bin/grep [g]st\-launch | /bin/grep $host | awk '{ print $2 }'); do
       kill $pid
-    fi
+    done
   done
-  vlc=`/usr/bin/pgrep vlc | wc -l`
-  if [ $vlc -gt 0 ]; then
-    child=`/usr/bin/killall vlc`
-  fi
 }
 
 case "$1" in
@@ -87,7 +88,7 @@ case "$1" in
 	  echo -n "starting $host:   "
 	  loopvideo $host &
 	  sleep 1
-          ident=${host}_ident
+    ident=${host}_ident
 	  running=`/bin/ps aux | /bin/grep [g]st-launch | /bin/grep ${!ident} | wc -l`
 	  if [ $running -eq 1 ] ; then
 	    echo "finished."
