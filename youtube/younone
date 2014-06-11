@@ -11,7 +11,7 @@ source parts
   GST_DEBUG=rtmpsink:5 gst-launch-1.0 \
     $CAMSRC \
     camera. ! rtpjitterbuffer latency=2000 ! rtph264depay ! $VPARSE \
-    $CAMAUDIO ! queue ! \
+    $AUDIOSRC ! queue ! audiorate ! \
     $AENCODER ! $APARSE ! $MUX ! \
     rtmpsink \
       location="rtmp://a.rtmp.youtube.com/live2/x/${ident}?videoKeyframeFrequency=1&totalDatarate=896 app=live2 flashVer=\"FME/3.0%20(compatible;%20FMSc%201.0)\" swfUrl=rtmp://a.rtmp.youtube.com/live2" 
