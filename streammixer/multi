@@ -1,0 +1,46 @@
+#!/bin/bash
+
+ident="southern-califo-0973.ew85-q6vj-x5mv-e2zj"
+ipaddress=192.168.2.155
+name=test
+
+RBR=6000
+LBR=1000
+DELAY=1500
+HWENCODE=true
+ALSAINPUT=`arecord --list-pcms | grep default | grep CODEC`
+V4LINPUT=`v4l2-ctl --list-devices | grep stk1160 -A1 | tail -1 | awk '{ print $1 }'`
+
+SLIDES="v4l2src device=$V4LINPUT ! video/x-raw,format=I420,framerate=30000/1001,width=720,height=480,interlace-mode=mixed,pixel-aspect-ratio=1/1 ! videoscale ! video/x-raw,width=1440,height=960"
+SLIDES="videotestsrc pattern=smpte is-live=true ! video/x-raw,width=1440,height=960"
+
+if [ $HWENCODE ]; then
+  ENCODE_LIVE="vaapiencode_h264 bitrate=$LBR keyframe-period=60 max-bframes=0 cabac=true tune=0 rate-control=2 ! queue ! "
+  ENCODE_REC="vaapiencode_h264 bitrate=$RBR keyframe-period=60 max-bframes=0 cabac=true tune=0 rate-control=2 ! queue ! "
+else
+  ENCODE_LIVE="x264enc bitrate=$LBR key-int-max=60 bframes=0 byte-stream=false aud=true tune=zerolatency !"
+  ENCODE_REC="x264enc bitrate=$RBR key-int-max=60 bframes=0 byte-stream=false aud=true tune=zerolatency ! "
+fi
+#     queue ! voaacenc bitrate=128000 ! \
+
+gst-launch-1.0 -v videomixer name=mix sink_1::xpos=480 sink_1::ypos=60 ! videoconvert ! "video/x-raw, width=1920, height=1080" ! \
+   queue ! videorate ! "video/x-raw,framerate=30/1" ! tee name=mixed ! \
+    queue ! $ENCODE_REC \
+    h264parse ! "video/x-h264,level=(string)4.1,profile=main" ! muxer. \
+   mixed. ! queue ! videoscale ! "video/x-raw, width=640, height=360" ! \
+    $ENCODE_LIVE \
+    h264parse ! "video/x-h264,level=(string)4.1,profile=main" ! queue ! mux. \
+   alsasrc device="$ALSAINPUT" ! "audio/x-raw,format=S16LE,rate=44100,channels=1" ! \
+     queue ! voaacenc bitrate=128000 ! \
+     aacparse ! "audio/mpeg,mpegversion=4,stream-format=raw" ! tee name=audio ! queue ! \
+   flvmux streamable=true name=mux ! queue ! \
+   filesink location=$name.flv \
+   flvmux streamable=true name=muxer ! filesink location=big-$name.flv audio. ! queue ! muxer.\
+   $SLIDES ! mix. \
+   rtspsrc location=rtsp://${ipaddress}:554/profile5/media.smp latency=0 name=camera use-pipeline-clock=true ntp-sync=false buffer-mode=0 \
+   camera. ! rtpjitterbuffer latency=0 ts-offset=-15000 ! rtph264depay ! decodebin ! videorate ! "video/x-raw,framerate=30/1" ! aspectratiocrop aspect-ratio=4/3 ! mix. \
+   camera. ! rtpg726depay ! fakesink \
+   multifilesrc location="../test-scripts/lax.jpg" caps="image/jpeg,framerate=1/1" ! \
+     jpegdec  ! "video/x-raw, width=1920, height=1080" ! mix. \
+
+
